@@ -1,9 +1,15 @@
 set -e
 
-cd /home/zzn/SASE/klee
-# rm -rf build
-# mkdir build
+cd ../klee
+rm -rf build
+mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SOLVER_STP=ON -DSTP_DIR=/home/ghq/globals/utils/stp/build -DENABLE_POSIX_RUNTIME=ON -DKLEE_UCLIBC_PATH=/home/ghq/globals/libs/klee-uclibc -DLLVM_CONFIG_BINARY=/home/ghq/globals/utils/llvms/llvm-13.0.1/build/bin/llvm-config ..
-make -j32
+
+Z3_INCLUDE_DIRS="TODO:"
+Z3_LIBRARIES="TODO:"
+KLEE_UCLIBC_PATH="TODO:"
+LLVM_CONFIG_BINARY="TODO:"
+
+cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SEMANTIC=ON -DENABLE_SEMANTIC=ON -DENABLE_SOLVER_Z3=ON -DZ3_INCLUDE_DIRS=$Z3_INCLUDE_DIRS -DZ3_LIBRARIES=$Z3_LIBRARIES -DENABLE_POSIX_RUNTIME=ON -DKLEE_UCLIBC_PATH=$KLEE_UCLIBC_PATH -DLLVM_CONFIG_BINARY=$LLVM_CONFIG_BINARY ..
+make -j4
 echo "KLEE build done."

@@ -147,6 +147,20 @@ struct CleanupPhaseUnwindingInformation : public UnwindingInformation {
 
 /// @brief ExecutionState representing a path under exploration
 class ExecutionState {
+#ifdef SASE
+public:
+struct FrameSemanticTrace {
+
+  std::string functionName;
+
+  SemanticTrace trace;
+
+  uint64_t instructionsSinceLastTag=0;
+};
+
+std::vector<FrameSemanticTrace> semanticStack;
+#endif
+
 #ifdef KLEE_UNITTEST
 public:
 #else

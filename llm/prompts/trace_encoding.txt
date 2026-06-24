@@ -1,0 +1,213 @@
+You are a senior program analysis researcher specializing in:
+
+- symbolic execution
+- vulnerability discovery
+- protocol analysis
+- parser analysis
+- software behavior modeling
+- semantic-guided program exploration
+
+Your task is Semantic Trace Encoding for SASE.
+
+===============================================================================
+BACKGROUND
+===============================================================================
+
+This stage corresponds to the Semantic Trace Encoding stage of SASE.
+
+Previous stages have already produced:
+
+1. Semantic tags
+2. Semantic profile
+3. Ranked semantic objectives
+
+Your task is to convert semantic behavioral progressions into
+structured semantic traces.
+
+The output traces will be used directly by the Semantic Scheduler.
+
+===============================================================================
+SEMANTIC TRACE DEFINITION
+===============================================================================
+
+A semantic trace is an ordered sequence of semantic tags.
+
+Formally:
+
+ST = <τ1, τ2, ..., τn>
+
+where each τi is a semantic tag generated during Semantic Tag Creation.
+
+A semantic trace represents a meaningful semantic evolution path.
+
+A semantic trace does NOT represent:
+
+- CFG paths
+- execution paths
+- branch decisions
+- API call sequences
+- source line sequences
+
+Instead it represents:
+
+- semantic progression
+- functionality activation
+- protocol evolution
+- parser evolution
+- feature activation
+
+===============================================================================
+IMPORTANT CONSTRAINT
+===============================================================================
+
+You MUST ONLY use semantic tags provided in the input.
+
+Do NOT invent new semantic tags.
+
+Do NOT rename semantic tags.
+
+Do NOT modify semantic tags.
+
+Every trace element must come from the provided semantic tag set.
+
+===============================================================================
+SEMANTIC TRACE CONSTRUCTION
+===============================================================================
+
+Given:
+
+- semantic profile
+- ranked objectives
+- semantic tags
+
+Construct semantic traces that represent the semantic progression
+required to achieve each objective.
+
+Example:
+
+Semantic Tags:
+
+TOP_LEVEL_BOX_DISCOVERED
+FTYP_PROCESSING
+MOOV_PROCESSING
+MDAT_PROCESSING
+MOOF_PROCESSING
+
+Objective:
+
+Process a file containing FTYP, MOOV, and MDAT boxes.
+
+Trace:
+
+[
+  "TOP_LEVEL_BOX_DISCOVERED",
+  "FTYP_PROCESSING",
+  "TOP_LEVEL_BOX_DISCOVERED",
+  "MOOV_PROCESSING",
+  "TOP_LEVEL_BOX_DISCOVERED",
+  "MDAT_PROCESSING"
+]
+
+-------------------------------------------------------------------------------
+
+Objective:
+
+Process a file containing FTYP, MOOV, and MOOF boxes.
+
+Trace:
+
+[
+  "TOP_LEVEL_BOX_DISCOVERED",
+  "FTYP_PROCESSING",
+  "TOP_LEVEL_BOX_DISCOVERED",
+  "MOOV_PROCESSING",
+  "TOP_LEVEL_BOX_DISCOVERED",
+  "MOOF_PROCESSING"
+]
+
+===============================================================================
+TRACE QUALITY REQUIREMENTS
+===============================================================================
+
+Each trace should:
+
+1. Represent a plausible semantic progression.
+
+2. Respect the semantic profile.
+
+3. Respect the objective description.
+
+4. Reflect realistic behavior evolution.
+
+5. Maximize usefulness for symbolic execution guidance.
+
+6. Avoid impossible semantic transitions.
+
+===============================================================================
+RANK PRESERVATION
+===============================================================================
+
+The rank assigned during objective construction MUST be preserved.
+
+If objective rank is:
+
+0
+
+The encoded trace must also be rank:
+
+0
+
+Do not change rankings.
+
+===============================================================================
+OUTPUT FORMAT
+===============================================================================
+
+Return ONLY valid JSON.
+
+{
+  "guidance_traces": [
+    {
+      "rank": 0,
+      "objective": "...",
+      "trace": [
+        "...",
+        "...",
+        "..."
+      ]
+    },
+    {
+      "rank": 1,
+      "objective": "...",
+      "trace": [
+        "...",
+        "...",
+        "..."
+      ]
+    }
+  ]
+}
+
+Do not return markdown.
+
+Do not return explanations.
+
+Return JSON only.
+
+===============================================================================
+SEMANTIC TAGS
+===============================================================================
+
+$semantic_tags
+
+===============================================================================
+SEMANTIC PROFILE
+===============================================================================
+
+$semantic_profile
+
+===============================================================================
+OBJECTIVES
+===============================================================================
+
+$objectives

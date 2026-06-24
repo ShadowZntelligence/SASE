@@ -507,7 +507,7 @@ void IterativeDeepeningTimeSearcher::update(ExecutionState *current,
         pausedStates.erase(it);
         alt.erase(std::remove(alt.begin(), alt.end(), state), alt.end());
       }
-    }    
+    }
     baseSearcher->update(current, addedStates, alt);
   } else {
     baseSearcher->update(current, addedStates, removedStates);
@@ -573,3 +573,181 @@ void InterleavedSearcher::printName(llvm::raw_ostream &os) {
     searcher->printName(os);
   os << "</InterleavedSearcher>\n";
 }
+
+#ifdef SASE
+SemanticTraceSearcher::SemanticTraceSearcher(
+  RNG &rng)
+  : theRNG(rng) {
+}
+bool SemanticTraceSearcher::empty() {
+  return states.empty();
+}
+void SemanticTraceSearcher::update(
+  ExecutionState *current,
+  const std::vector<ExecutionState*> &addedStates,
+  const std::vector<ExecutionState*> &removedStates)
+{
+  for (auto *s : addedStates)
+      states.insert(s);
+
+  for (auto *s : removedStates)
+      states.erase(s);
+}
+ExecutionState &
+SemanticTraceSearcher::selectState()
+{
+    assert(!states.empty());
+
+    auto it = states.begin();
+
+    ExecutionState *best = *it;
+
+    ++it;
+
+    for (; it != states.end(); ++it)
+    {
+        ExecutionState *candidate = *it;
+
+        if (better(
+                candidate,
+                best))
+        {
+            best = candidate;
+        }
+    }
+
+    return *best;
+}
+
+unsigned
+SemanticTraceSearcher::computeLCS(
+    const std::vector<std::string> &A,
+    const std::vector<std::string> &B)
+{
+    unsigned n = A.size();
+    unsigned m = B.size();
+
+    std::vector<
+        std::vector<unsigned>
+    > dp(
+        n + 1,
+        std::vector<unsigned>(
+            m + 1,
+            0));
+
+    for (unsigned i = 1; i <= n; ++i)
+    {
+        for (unsigned j = 1; j <= m; ++j)
+        {
+            if (A[i-1] == B[j-1])
+            {
+                dp[i][j] =
+                    dp[i-1][j-1] + 1;
+            }
+            else
+            {
+                dp[i][j] =
+                    std::max(
+                        dp[i-1][j],
+                        dp[i][j-1]);
+            }
+        }
+    }
+
+    return dp[n][m];
+}
+
+double
+SemanticTraceSearcher::computeSimilarity(
+    const std::vector<std::string> &trace,
+    const GuidanceSet &guidance)
+{
+    double score = 0.0;
+
+    for (const auto &g : guidance)
+    {
+        unsigned lcs =
+            computeLCS(
+                trace,
+                g.trace);
+
+        score +=
+            std::pow(
+                0.5,
+                g.rank)
+            *
+            lcs;
+    }
+
+    return score;
+}
+
+double
+SemanticTraceSearcher::computeFrameScore(
+    ExecutionState *state,
+    unsigned frameIndex)
+const
+{
+    auto &frame =
+        state->semanticTrace.frames[
+            frameIndex];
+
+    auto guidance =
+        SemanticGuidanceManager::
+            getGuidance(
+                frame.functionName);
+
+    return computeSimilarity(
+        frame.tags,
+        guidance);
+}
+
+bool
+SemanticTraceSearcher::better(
+    ExecutionState *a,
+    ExecutionState *b)
+const
+{
+    unsigned depth =
+        std::min(
+            a->semanticTrace.frames.size(),
+            b->semanticTrace.frames.size());
+
+    for (unsigned i = 0;
+         i < depth;
+         ++i)
+    {
+        double sa =
+            computeFrameScore(a,i);
+
+        double sb =
+            computeFrameScore(b,i);
+
+        if (sa > sb)
+            return true;
+
+        if (sa < sb)
+            return false;
+
+        auto &fa =
+            a->semanticTrace.frames[i];
+
+        auto &fb =
+            b->semanticTrace.frames[i];
+
+        if (
+            fa.functionName !=
+            fb.functionName)
+        {
+            return theRNG.getBool();
+        }
+    }
+
+    return theRNG.getBool();
+}
+void SemanticTraceSearcher::printName(
+  llvm::raw_ostream &os)
+{
+  os << "SemanticTraceSearcher\n";
+}
+#endif

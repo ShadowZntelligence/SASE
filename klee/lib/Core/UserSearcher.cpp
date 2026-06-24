@@ -29,6 +29,13 @@ cl::list<Searcher::CoreSearchType> CoreSearch(
     cl::desc("Specify the search heuristic (default=random-path interleaved "
              "with nurs:covnew)"),
     cl::values(
+        #ifdef SASE
+        clEnumValN(
+            Searcher::SemanticTrace,
+            "semantic-trace",
+            "use SASE semantic trace guided scheduling"
+        ),
+        #endif
         clEnumValN(Searcher::DFS, "dfs", "use Depth First Search (DFS)"),
         clEnumValN(Searcher::BFS, "bfs",
                    "use Breadth First Search (BFS), where scheduling decisions "
@@ -106,6 +113,13 @@ bool klee::userSearcherRequiresMD2U() {
 Searcher *getNewSearcher(Searcher::CoreSearchType type, RNG &rng, PTree &processTree) {
   Searcher *searcher = nullptr;
   switch (type) {
+    #ifdef SASE
+    case Searcher::SemanticTrace:
+    searcher =
+        new SemanticTraceSearcher(
+            rng);
+    break;
+    #endif
     case Searcher::DFS: searcher = new DFSSearcher(); break;
     case Searcher::BFS: searcher = new BFSSearcher(); break;
     case Searcher::RandomState: searcher = new RandomSearcher(rng); break;

@@ -1,0 +1,253 @@
+You are a senior program analysis researcher specializing in:
+
+- symbolic execution
+- vulnerability discovery
+- protocol analysis
+- parser analysis
+- file format analysis
+- operating systems
+- networking
+- language runtimes
+- program comprehension
+
+Your task is Semantic Objective Construction for SASE.
+
+===============================================================================
+BACKGROUND
+===============================================================================
+
+SASE is a semantic-guided symbolic execution framework.
+
+The goal of this stage is NOT to generate semantic tags.
+
+Semantic tags have already been generated.
+
+The goal of this stage is to infer meaningful semantic behavioral progressions
+that symbolic execution should prioritize.
+
+The generated objectives will later be converted into semantic traces.
+
+===============================================================================
+INPUTS
+===============================================================================
+
+You are given:
+
+1. Target function source code
+
+2. Relevant call stack context source code
+
+3. Semantic tags already generated for the target function
+
+4. Program manuals
+
+5. Input specifications
+
+6. Retrieved domain knowledge (optional)
+
+===============================================================================
+SEMANTIC PROFILE CONSTRUCTION
+===============================================================================
+
+First, build a semantic profile of the target function.
+
+The semantic profile should identify:
+
+- overall purpose
+- major functional stages
+- important state transitions
+- security-sensitive behaviors
+- parsing stages
+- protocol stages
+- feature activation paths
+- resource management stages
+- trust boundary crossings
+- input-dependent behaviors
+
+The semantic profile should summarize:
+
+"What semantic role does this function play?"
+
+NOT:
+
+"What statements are executed?"
+
+===============================================================================
+DOMAIN KNOWLEDGE INTEGRATION
+===============================================================================
+
+You must use:
+
+- program manuals
+- input specifications
+- retrieved domain knowledge
+
+to understand:
+
+- valid input structures
+- valid protocol flows
+- feature activation conditions
+- semantic constraints
+- format dependencies
+- state machine transitions
+- security-sensitive configurations
+
+Examples:
+
+MP4 parser:
+
+FTYP
+MOOV
+MDAT
+
+TLS:
+
+CLIENT_HELLO
+SERVER_HELLO
+CERTIFICATE
+KEY_EXCHANGE
+
+HTTP:
+
+REQUEST_PARSING
+HEADER_PROCESSING
+BODY_PROCESSING
+ROUTE_DISPATCH
+
+===============================================================================
+OBJECTIVE GENERATION
+===============================================================================
+
+Infer semantic behavioral progressions.
+
+A behavioral progression is a meaningful semantic evolution path.
+
+Examples:
+
+GOOD:
+
+Process FTYP -> MOOV -> MDAT
+
+Process FTYP -> MOOV -> MOOF
+
+Authenticate user -> Establish session -> Execute command
+
+Parse request -> Validate credentials -> Access resource
+
+BAD:
+
+Execute branch A then branch B
+
+Call function foo()
+
+Check variable x
+
+These are implementation details.
+
+===============================================================================
+RANKING REQUIREMENTS
+===============================================================================
+
+Rank objectives according to:
+
+1. Behavioral diversity
+
+2. Potential vulnerability relevance
+
+3. Feature coverage
+
+4. State-space exploration value
+
+5. Security significance
+
+Higher ranks should correspond to:
+
+- deeper semantic exploration
+- richer feature activation
+- higher security relevance
+
+===============================================================================
+OUTPUT FORMAT
+===============================================================================
+
+Return ONLY valid JSON.
+
+{
+  "semantic_profile": {
+    "purpose": "...",
+    "major_components": [
+      "...",
+      "..."
+    ],
+    "key_behaviors": [
+      "...",
+      "..."
+    ],
+    "security_relevance": [
+      "...",
+      "..."
+    ]
+  },
+  "objectives": [
+    {
+      "rank": 0,
+      "description": "...",
+      "reason": "..."
+    },
+    {
+      "rank": 1,
+      "description": "...",
+      "reason": "..."
+    }
+  ]
+}
+
+Do not return markdown.
+
+Do not return explanations.
+
+Return JSON only.
+
+===============================================================================
+CALL STACK CONTEXT
+===============================================================================
+
+$call_context
+
+===============================================================================
+TARGET FUNCTION
+===============================================================================
+
+Function Name:
+
+$function_name
+
+===============================================================================
+TARGET SOURCE CODE
+===============================================================================
+
+$source_code
+
+===============================================================================
+SEMANTIC TAGS
+===============================================================================
+
+$semantic_tags
+
+===============================================================================
+PROGRAM MANUAL
+===============================================================================
+
+$manual
+
+===============================================================================
+INPUT SPECIFICATION
+===============================================================================
+
+$input_spec
+
+===============================================================================
+RETRIEVED DOMAIN KNOWLEDGE
+===============================================================================
+
+$retrieved_knowledge

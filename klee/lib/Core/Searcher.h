@@ -61,6 +61,9 @@ namespace klee {
     virtual void printName(llvm::raw_ostream &os) = 0;
 
     enum CoreSearchType : std::uint8_t {
+      #ifdef SASE
+      SemanticTrace,
+      #endif
       DFS,
       BFS,
       RandomState,
@@ -139,7 +142,7 @@ namespace klee {
     RNG &theRNG;
     WeightType type;
     bool updateWeights;
-    
+
     double getWeight(ExecutionState*);
 
   public:
@@ -313,6 +316,67 @@ namespace klee {
     bool empty() override;
     void printName(llvm::raw_ostream &os) override;
   };
+
+  #ifdef SASE
+  // Semantic Trace-Guided State Scheduling Strategy
+  class SemanticTraceSearcher final : public Searcher {
+  private:
+
+    std::set<ExecutionState*> states;
+
+    RNG &theRNG;
+
+  public:
+
+    explicit SemanticTraceSearcher(RNG &rng);
+
+    ~SemanticTraceSearcher() override = default;
+
+    ExecutionState &selectState() override;
+
+    void update(
+        ExecutionState *current,
+        const std::vector<ExecutionState*> &addedStates,
+        const std::vector<ExecutionState*> &removedStates
+    ) override;
+
+    bool empty() override;
+
+    void printName(
+        llvm::raw_ostream &os
+    ) override;
+
+  private:
+
+    /// Compare two states according to
+    /// Algorithm F.c.
+    bool better(
+        ExecutionState *a,
+        ExecutionState *b
+    ) const;
+
+    /// Compute Score_i(s)
+    double computeFrameScore(
+        ExecutionState *state,
+        unsigned frameIndex
+    ) const;
+
+    /// Compute
+    ///
+    /// Sim(ST,G)
+    ///
+    double computeSimilarity(
+        const std::vector<std::string> &trace,
+        const GuidanceSet &guidance
+    ) const;
+
+    /// LCS length
+    unsigned computeLCS(
+        const std::vector<std::string> &A,
+        const std::vector<std::string> &B
+    ) const;
+  };
+  #endif
 
 } // klee namespace
 

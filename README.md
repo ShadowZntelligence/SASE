@@ -52,7 +52,7 @@ SASE/
 │   ├── objective_construction.py             # Semantic Objective Construction
 │   ├── trace_encoding.py                     # Semantic Trace Encoding
 │   └── prompts/
-│       ├── tag_creation.txt                  # Prompt for semantic tag insertion
+│       ├── tag_creation.txt                  # Prompt for semantic tag creation
 │       ├── profile_generation.txt            # Prompt for semantic profile generation
 │       ├── domain_knowledge.txt              # Prompt for domain knowledge retrieval
 │       ├── behavior_progression.txt          # Prompt for semantically meaningful behavioral progression inference

@@ -53,7 +53,10 @@ SASE/
 │   ├── trace_encoding.py                     # Semantic Trace Encoding
 │   └── prompts/
 │       ├── tag_creation.txt                  # Prompt for semantic tag insertion
-│       ├── objective_construction.txt        # Prompt for semantic objective construction
+│       ├── profile_generation.txt            # Prompt for semantic profile generation
+│       ├── domain_knowledge.txt              # Prompt for domain knowledge retrieval
+│       ├── behavior_progression.txt          # Prompt for semantically meaningful behavioral progression inference
+│       ├── objective_ranking.txt             # Prompt for semantic objective ranking
 │       └── trace_encoding.txt                # Prompt for encoding objectives into semantic traces
 │
 └── klee/                                     # SASE executor

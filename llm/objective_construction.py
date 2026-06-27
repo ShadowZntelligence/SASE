@@ -1,303 +1,480 @@
+from __future__ import annotations
+
 import json
+import os
 from pathlib import Path
-from string import Template
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Dict, List, Optional
 
 from openai import OpenAI
 
-client = OpenAI()
+
+###############################################################################
+# Configuration
+###############################################################################
+
+OPENAI_MODEL = "gpt-4o"
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+_client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-class ObjectiveConstructionError(Exception):
-    pass
+###############################################################################
+# Prompt Loader
+###############################################################################
 
-
-class RAGRetriever:
+def _load_prompt(prompt_name: str) -> str:
     """
-    Simple document retriever.
-
-    Can later be replaced by:
-    - FAISS
-    - Chroma
-    - Milvus
-    - Elasticsearch
+    Load a prompt template from the prompts directory.
     """
 
-    def __init__(
-        self,
-        knowledge_dir: str,
-    ):
-        self.knowledge_dir = Path(
-            knowledge_dir
+    prompt_dir = Path(__file__).parent / "prompts"
+
+    prompt_path = prompt_dir / prompt_name
+
+    with open(prompt_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+###############################################################################
+# LLM Helper
+###############################################################################
+
+def _call_llm(
+    prompt: str,
+    user_content: str,
+    temperature: float = 0.2,
+) -> str:
+    """
+    Invoke the OpenAI Chat Completion API.
+    """
+
+    response = _client.chat.completions.create(
+        model=OPENAI_MODEL,
+        temperature=temperature,
+        messages=[
+            {
+                "role": "system",
+                "content": prompt,
+            },
+            {
+                "role": "user",
+                "content": user_content,
+            },
+        ],
+    )
+
+    return response.choices[0].message.content.strip()
+
+
+###############################################################################
+# JSON Helper
+###############################################################################
+
+def _parse_json(text: str):
+    """
+    Parse JSON returned by the LLM.
+
+    Markdown code fences are automatically removed.
+    """
+
+    text = text.strip()
+
+    if text.startswith("```json"):
+        text = text[7:]
+
+    elif text.startswith("```"):
+        text = text[3:]
+
+    if text.endswith("```"):
+        text = text[:-3]
+
+    return json.loads(text)
+
+
+###############################################################################
+# RAG
+###############################################################################
+
+def _retrieve_knowledge(
+    semantic_profile: Dict,
+    manual: str,
+    input_spec: str,
+    use_rag: bool,
+    knowledge_dir: Optional[str],
+) -> str:
+    """
+    Retrieve domain knowledge.
+
+    Non-RAG mode:
+        Directly concatenate the manual and specification.
+
+    RAG mode:
+        Retrieve the most relevant documents from knowledge_dir.
+    """
+
+    #
+    # Non-RAG mode
+    #
+    if not use_rag:
+
+        return (
+            "# Program Manual\n\n"
+            + manual
+            + "\n\n"
+            + "# Input Specification\n\n"
+            + input_spec
         )
 
-    def retrieve(
-        self,
-        query: str,
-        top_k: int = 5,
-    ) -> str:
-        """
-        Simple keyword retrieval.
+    #
+    # Fallback
+    #
+    if knowledge_dir is None:
 
-        Replace with embedding search
-        in production.
-        """
+        return (
+            "# Program Manual\n\n"
+            + manual
+            + "\n\n"
+            + "# Input Specification\n\n"
+            + input_spec
+        )
 
-        if not self.knowledge_dir.exists():
-            return ""
+    if not os.path.isdir(knowledge_dir):
 
-        candidates = []
+        return (
+            "# Program Manual\n\n"
+            + manual
+            + "\n\n"
+            + "# Input Specification\n\n"
+            + input_spec
+        )
 
-        for file_path in self.knowledge_dir.rglob("*"):
+    #
+    # Simple keyword-based retrieval.
+    #
+    keywords = []
 
-            if not file_path.is_file():
-                continue
+    keywords.extend(
+        semantic_profile.get("major_components", [])
+    )
 
-            try:
-                content = file_path.read_text(
-                    encoding="utf-8",
-                    errors="ignore",
-                )
+    keywords.extend(
+        semantic_profile.get("major_behaviors", [])
+    )
 
-            except Exception:
-                continue
+    keywords.extend(
+        semantic_profile.get("important_objects", [])
+    )
 
-            score = 0
+    documents = []
 
-            query_tokens = (
-                query.lower()
-                .replace("\n", " ")
-                .split()
+    for filename in os.listdir(knowledge_dir):
+
+        if not filename.endswith(".txt"):
+            continue
+
+        path = os.path.join(
+            knowledge_dir,
+            filename,
+        )
+
+        with open(
+            path,
+            "r",
+            encoding="utf-8",
+        ) as f:
+
+            text = f.read()
+
+        score = 0
+
+        lower = text.lower()
+
+        for keyword in keywords:
+
+            score += lower.count(keyword.lower())
+
+        documents.append(
+            (
+                score,
+                filename,
+                text,
             )
-
-            text_lower = content.lower()
-
-            for token in query_tokens:
-
-                if token in text_lower:
-                    score += 1
-
-            if score > 0:
-                candidates.append(
-                    (
-                        score,
-                        content,
-                    )
-                )
-
-        candidates.sort(
-            key=lambda x: x[0],
-            reverse=True,
         )
 
-        selected = candidates[:top_k]
+    documents.sort(
+        key=lambda x: x[0],
+        reverse=True,
+    )
 
-        return "\n\n".join(
-            x[1]
-            for x in selected
+    #
+    # Keep Top-5 documents.
+    #
+    selected = []
+
+    for _, filename, text in documents[:5]:
+
+        selected.append(
+            f"# {filename}\n\n{text}"
         )
 
+    #
+    # Always include the original manual/specification.
+    #
+    selected.append(
+        "# Program Manual\n\n"
+        + manual
+    )
 
-class ObjectiveConstructor:
+    selected.append(
+        "# Input Specification\n\n"
+        + input_spec
+    )
 
-    def __init__(
-        self,
-        model: str = "gpt-4.1",
-        prompt_path: Optional[str] = None,
-        use_rag: bool = False,
-        knowledge_dir: Optional[str] = None,
-    ):
-        self.model = model
+    return "\n\n".join(selected)
 
-        if prompt_path is None:
-            prompt_path = (
-                Path(__file__).parent
-                / "prompts"
-                / "objective_construction.txt"
-            )
 
-        self.prompt_path = Path(
-            prompt_path
-        )
+###############################################################################
+# Stage 1
+###############################################################################
 
-        self.use_rag = use_rag
+def _build_semantic_profile(
+    function_name: str,
+    source_code: str,
+    call_context: str,
+    semantic_tags: List[str],
+) -> Dict:
+    """
+    Stage 1.
 
-        self.retriever = None
+    Generate the semantic profile of the target function.
+    """
 
-        if use_rag and knowledge_dir:
-            self.retriever = RAGRetriever(
-                knowledge_dir
-            )
+    prompt = _load_prompt(
+        "profile_generation.txt"
+    )
 
-    def load_prompt(self) -> str:
-
-        return self.prompt_path.read_text(
-            encoding="utf-8"
-        )
-
-    def build_retrieval_query(
-        self,
-        function_name: str,
-        semantic_tags: List[str],
-        source_code: str,
-    ) -> str:
-        """
-        Build retrieval query.
-        """
-
-        return f"""
+    user = f"""
 Function:
+
 {function_name}
 
-Semantic Tags:
-{" ".join(semantic_tags)}
+==================================================
 
-Source:
-{source_code[:4000]}
+Source Code:
+
+{source_code}
+
+==================================================
+
+Call Context:
+
+{call_context}
+
+==================================================
+
+Semantic Tags:
+
+{json.dumps(semantic_tags, indent=2)}
 """
 
-    def retrieve_domain_knowledge(
-        self,
-        function_name: str,
-        semantic_tags: List[str],
-        source_code: str,
-    ) -> str:
+    response = _call_llm(
+        prompt,
+        user,
+    )
 
-        if not self.use_rag:
-            return ""
+    return _parse_json(response)
 
-        if self.retriever is None:
-            return ""
+###############################################################################
+# Stage 2
+###############################################################################
 
-        query = self.build_retrieval_query(
-            function_name=function_name,
-            semantic_tags=semantic_tags,
-            source_code=source_code,
-        )
+def _build_domain_knowledge(
+    semantic_profile: Dict,
+    manual: str,
+    input_spec: str,
+    use_rag: bool,
+    knowledge_dir: Optional[str],
+) -> Dict:
+    """
+    Stage 2.
 
-        return self.retriever.retrieve(
-            query=query,
-            top_k=5,
-        )
+    Build domain knowledge conditioned on the semantic profile.
 
-    def build_prompt(
-        self,
-        function_name: str,
-        source_code: str,
-        call_context: str,
-        semantic_tags: List[str],
-        manual: str,
-        input_spec: str,
-        retrieved_knowledge: str,
-    ) -> str:
+    The paper first derives a semantic profile, and then incorporates
+    the program manual and the input specification to obtain
+    domain-specific knowledge.
 
-        template = Template(
-            self.load_prompt()
-        )
+    Two modes are supported:
 
-        return template.safe_substitute(
-            function_name=function_name,
-            source_code=source_code,
-            call_context=call_context,
-            semantic_tags=json.dumps(
-                semantic_tags,
-                indent=2,
-            ),
-            manual=manual,
-            input_spec=input_spec,
-            retrieved_knowledge=retrieved_knowledge,
-        )
+        1. Direct mode (manual + specification)
 
-    def construct(
-        self,
-        function_name: str,
-        source_code: str,
-        call_context: str,
-        semantic_tags: List[str],
-        manual: str,
-        input_spec: str,
-    ) -> Dict:
-        """
-        Paper E.c
+        2. RAG-assisted mode
+    """
 
-        Input:
-            source code
-            call stack context
-            semantic tags
-            manual
-            input specification
+    prompt = _load_prompt(
+        "domain_knowledge.txt"
+    )
 
-        Output:
-            ranked semantic objectives
-        """
+    knowledge = _retrieve_knowledge(
+        semantic_profile,
+        manual,
+        input_spec,
+        use_rag,
+        knowledge_dir,
+    )
 
-        retrieved_knowledge = (
-            self.retrieve_domain_knowledge(
-                function_name=function_name,
-                semantic_tags=semantic_tags,
-                source_code=source_code,
-            )
-        )
+    user = f"""
+Semantic Profile
 
-        prompt = self.build_prompt(
-            function_name=function_name,
-            source_code=source_code,
-            call_context=call_context,
-            semantic_tags=semantic_tags,
-            manual=manual,
-            input_spec=input_spec,
-            retrieved_knowledge=retrieved_knowledge,
-        )
+{json.dumps(semantic_profile, indent=2)}
 
-        response = (
-            client.chat.completions.create(
-                model=self.model,
-                temperature=0.1,
-                messages=[
-                    {
-                        "role": "system",
-                        "content":
-                        (
-                            "You are an expert "
-                            "in symbolic execution, "
-                            "program analysis, "
-                            "vulnerability discovery, "
-                            "protocol analysis, "
-                            "and semantic reasoning."
-                        ),
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    },
-                ],
-            )
-        )
+==================================================
 
-        content = (
-            response
-            .choices[0]
-            .message
-            .content
-            .strip()
-        )
+Retrieved Knowledge
 
-        try:
+{knowledge}
+"""
 
-            result = json.loads(
-                content
-            )
+    response = _call_llm(
+        prompt,
+        user,
+    )
 
-        except Exception as e:
+    return _parse_json(response)
 
-            raise ObjectiveConstructionError(
-                f"Invalid JSON returned:\n{content}"
-            ) from e
 
-        return result
+###############################################################################
+# Stage 3
+###############################################################################
 
+def _infer_behavior_progressions(
+    function_name: str,
+    semantic_profile: Dict,
+    domain_knowledge: Dict,
+) -> List[Dict]:
+    """
+    Stage 3.
+
+    Infer semantically meaningful behavioral progressions.
+
+    Each progression is still represented in natural language.
+    Semantic trace encoding is performed later by trace_encoding.py.
+    """
+
+    prompt = _load_prompt(
+        "behavior_progression.txt"
+    )
+
+    user = f"""
+Function
+
+{function_name}
+
+==================================================
+
+Semantic Profile
+
+{json.dumps(semantic_profile, indent=2)}
+
+==================================================
+
+Domain Knowledge
+
+{json.dumps(domain_knowledge, indent=2)}
+"""
+
+    response = _call_llm(
+        prompt,
+        user,
+    )
+
+    result = _parse_json(response)
+
+    if isinstance(result, dict):
+
+        if "progressions" in result:
+            return result["progressions"]
+
+        if "behaviors" in result:
+            return result["behaviors"]
+
+    return result
+
+
+###############################################################################
+# Stage 4
+###############################################################################
+
+def _rank_objectives(
+    function_name: str,
+    semantic_profile: Dict,
+    progressions: List[Dict],
+) -> List[Dict]:
+    """
+    Stage 4.
+
+    Rank the inferred behavioral progressions.
+
+    Higher-ranked objectives should contribute more to
+
+        - behavioral diversity
+
+        - vulnerability discovery
+
+    as described in the paper.
+    """
+
+    prompt = _load_prompt(
+        "objective_ranking.txt"
+    )
+
+    user = f"""
+Function
+
+{function_name}
+
+==================================================
+
+Semantic Profile
+
+{json.dumps(semantic_profile, indent=2)}
+
+==================================================
+
+Behavior Progressions
+
+{json.dumps(progressions, indent=2)}
+"""
+
+    response = _call_llm(
+        prompt,
+        user,
+    )
+
+    ranked = _parse_json(response)
+
+    if isinstance(ranked, dict):
+
+        if "objectives" in ranked:
+            ranked = ranked["objectives"]
+
+        elif "results" in ranked:
+            ranked = ranked["results"]
+
+    #
+    # Normalize ranking.
+    #
+    for index, obj in enumerate(ranked):
+
+        if "rank" not in obj:
+            obj["rank"] = index
+
+    return ranked
+
+###############################################################################
+# Public API
+###############################################################################
 
 def construct_objectives(
     function_name: str,
@@ -310,27 +487,119 @@ def construct_objectives(
     knowledge_dir: Optional[str] = None,
 ) -> Dict:
     """
-    High-level API.
+    Construct semantic exploration objectives.
 
-    Supports:
+    This function implements Section III-E.c of the paper.
 
-    Mode 1:
-        No RAG
+    Pipeline:
 
-    Mode 2:
-        RAG-assisted
+        Stage 1
+            Semantic Profile Generation
+
+        Stage 2
+            Domain Knowledge Construction
+
+        Stage 3
+            Behavioral Progression Inference
+
+        Stage 4
+            Objective Ranking
+
+    Parameters
+    ----------
+    function_name
+        Target function name.
+
+    source_code
+        Source code of the target function.
+
+    call_context
+        Source code of relevant caller/callee functions.
+
+    semantic_tags
+        Semantic tags generated during Tag Creation.
+
+    manual
+        Program manual.
+
+    input_spec
+        Program input specification.
+
+    use_rag
+        Whether to enable RAG-based retrieval.
+
+    knowledge_dir
+        Directory containing external knowledge (.txt).
+
+    Returns
+    -------
+    dict
+
+        {
+            "semantic_profile": {...},
+
+            "domain_knowledge": {...},
+
+            "behavior_progressions": [...],
+
+            "objectives": [...]
+        }
+
+    The returned "objectives" are still natural-language semantic
+    objectives.
+
+    They should be passed to trace_encoding.py to generate the final
+    guidance traces.
     """
 
-    constructor = ObjectiveConstructor(
-        use_rag=use_rag,
-        knowledge_dir=knowledge_dir,
-    )
-
-    return constructor.construct(
+    #
+    # Stage 1
+    #
+    semantic_profile = _build_semantic_profile(
         function_name=function_name,
         source_code=source_code,
         call_context=call_context,
         semantic_tags=semantic_tags,
+    )
+
+    #
+    # Stage 2
+    #
+    domain_knowledge = _build_domain_knowledge(
+        semantic_profile=semantic_profile,
         manual=manual,
         input_spec=input_spec,
+        use_rag=use_rag,
+        knowledge_dir=knowledge_dir,
     )
+
+    #
+    # Stage 3
+    #
+    behavior_progressions = _infer_behavior_progressions(
+        function_name=function_name,
+        semantic_profile=semantic_profile,
+        domain_knowledge=domain_knowledge,
+    )
+
+    #
+    # Stage 4
+    #
+    objectives = _rank_objectives(
+        function_name=function_name,
+        semantic_profile=semantic_profile,
+        progressions=behavior_progressions,
+    )
+
+    return {
+        "function": function_name,
+        "semantic_profile": semantic_profile,
+        "domain_knowledge": domain_knowledge,
+        "behavior_progressions": behavior_progressions,
+        "objectives": objectives,
+    }
+
+
+__all__ = [
+    "construct_objectives",
+]

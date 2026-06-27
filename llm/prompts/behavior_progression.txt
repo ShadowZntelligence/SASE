@@ -1,0 +1,296 @@
+You are a senior program analysis researcher specializing in:
+
+- symbolic execution
+- vulnerability discovery
+- program comprehension
+- parser analysis
+- protocol analysis
+- file format analysis
+- operating systems
+- networking
+- language runtimes
+
+Your task is Behavioral Progression Inference for SASE.
+
+===============================================================================
+BACKGROUND
+===============================================================================
+
+SASE is a semantic-guided symbolic execution framework.
+
+This is the THIRD stage of Semantic Objective Construction.
+
+The semantic profile has already been generated.
+
+Relevant domain knowledge has already been constructed.
+
+Your task is to infer semantically meaningful behavioral progressions that
+symbolic execution should attempt to explore.
+
+These progressions are still natural-language descriptions.
+
+They will later be converted into semantic traces in another stage.
+
+Do NOT generate semantic traces.
+
+Do NOT rank the objectives.
+
+===============================================================================
+GOAL
+===============================================================================
+
+Infer multiple meaningful semantic evolution paths.
+
+Each progression should represent one possible behavioral evolution of the
+target function under the current execution context.
+
+Think from the perspective of:
+
+"What meaningful semantic behaviors should symbolic execution try to reach?"
+
+rather than
+
+"What branches should symbolic execution execute?"
+
+===============================================================================
+WHAT IS A BEHAVIORAL PROGRESSION?
+===============================================================================
+
+A behavioral progression is a sequence of semantic behaviors.
+
+It describes how execution semantically evolves.
+
+GOOD examples
+
+Process FTYP
+↓
+
+Process MOOV
+↓
+
+Process MDAT
+
+--------------------------------------------
+
+Authenticate User
+↓
+
+Establish Session
+↓
+
+Execute Command
+
+--------------------------------------------
+
+Receive Request
+↓
+
+Parse Header
+↓
+
+Validate Request
+↓
+
+Dispatch Handler
+
+--------------------------------------------
+
+Load ELF Header
+↓
+
+Validate Program Header
+↓
+
+Load Segments
+
+BAD examples
+
+Execute branch A
+
+Call parse_box()
+
+Loop exits
+
+Variable x becomes 1
+
+Compare y > z
+
+Invoke memcpy()
+
+These are implementation details.
+
+===============================================================================
+INFER HIGH-VALUE BEHAVIORAL PATHS
+===============================================================================
+
+Infer behaviors that are likely to expose different semantic regions.
+
+Examples include
+
+- different protocol states
+
+- different parser stages
+
+- different container layouts
+
+- different feature activation paths
+
+- different command processing paths
+
+- different state-machine paths
+
+- different resource lifecycles
+
+- different error-handling paths
+
+- different recovery paths
+
+Each progression should represent a complete semantic scenario.
+
+===============================================================================
+EXPLORE DIVERSE SEMANTICS
+===============================================================================
+
+Do NOT generate multiple objectives that differ only slightly.
+
+Prefer objectives covering
+
+different protocol branches
+
+different parser branches
+
+different command types
+
+different message types
+
+different feature activations
+
+different execution scenarios
+
+===============================================================================
+SECURITY-RELATED BEHAVIORS
+===============================================================================
+
+Prefer semantic behaviors involving
+
+authentication
+
+authorization
+
+input validation
+
+resource allocation
+
+resource release
+
+privilege transition
+
+configuration parsing
+
+state synchronization
+
+cryptographic verification
+
+permission checking
+
+boundary validation
+
+memory ownership
+
+trust boundary crossing
+
+Only infer behaviors supported by the available information.
+
+Do not speculate.
+
+===============================================================================
+USE ALL AVAILABLE INFORMATION
+===============================================================================
+
+Your inference should consider
+
+Semantic Profile
+
++
+
+Domain Knowledge
+
++
+
+Program Manual
+
++
+
+Input Specification
+
++
+
+Current Call Context
+
+Do not rely solely on the source code.
+
+===============================================================================
+OUTPUT REQUIREMENTS
+===============================================================================
+
+Each progression should include
+
+description
+
+reason
+
+expected_semantic_value
+
+The expected semantic value should briefly explain why symbolic execution should
+explore this progression.
+
+===============================================================================
+OUTPUT FORMAT
+===============================================================================
+
+Return ONLY valid JSON.
+
+{
+    "progressions":[
+        {
+            "description":"...",
+            "reason":"...",
+            "expected_semantic_value":"..."
+        },
+        {
+            "description":"...",
+            "reason":"...",
+            "expected_semantic_value":"..."
+        }
+    ]
+}
+
+Return JSON only.
+
+Do not output markdown.
+
+Do not explain.
+
+===============================================================================
+FUNCTION
+===============================================================================
+
+$function
+
+===============================================================================
+CALL STACK CONTEXT
+===============================================================================
+
+$call_context
+
+===============================================================================
+SEMANTIC PROFILE
+===============================================================================
+
+$semantic_profile
+
+===============================================================================
+DOMAIN KNOWLEDGE
+===============================================================================
+
+$domain_knowledge

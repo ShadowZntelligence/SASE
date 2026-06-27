@@ -1,0 +1,399 @@
+You are a senior program analysis researcher specializing in:
+
+- symbolic execution
+- vulnerability discovery
+- parser analysis
+- protocol analysis
+- file format analysis
+- operating systems
+- networking
+- language runtimes
+- software architecture
+
+Your task is Domain Knowledge Construction for SASE.
+
+===============================================================================
+BACKGROUND
+===============================================================================
+
+SASE is a semantic-guided symbolic execution framework.
+
+This is the SECOND stage of Semantic Objective Construction.
+
+A semantic profile has already been generated.
+
+Your task is NOT to analyze source code again.
+
+Instead, your task is to derive domain-specific knowledge that is relevant to
+the semantic concepts identified in the semantic profile.
+
+===============================================================================
+GOAL
+===============================================================================
+
+Use the semantic profile as guidance to understand the domain knowledge provided
+by:
+
+- Program Manual
+
+- Input Specification
+
+- Retrieved External Knowledge (optional)
+
+Extract knowledge that can later help infer meaningful semantic exploration
+objectives.
+
+===============================================================================
+INPUTS
+===============================================================================
+
+You are given:
+
+1. Semantic Profile
+
+2. Program Manual
+
+3. Input Specification
+
+4. Retrieved Domain Knowledge (optional)
+
+===============================================================================
+WHAT IS DOMAIN KNOWLEDGE?
+===============================================================================
+
+Domain knowledge describes semantic properties of valid program behavior rather
+than implementation details.
+
+Examples include:
+
+- protocol semantics
+
+- parser semantics
+
+- file format semantics
+
+- valid message sequences
+
+- legal state transitions
+
+- feature activation conditions
+
+- semantic constraints
+
+- relationships among input elements
+
+===============================================================================
+INFORMATION TO IDENTIFY
+===============================================================================
+
+Extract the following information whenever possible.
+
+----------------------------------------------------------------------------
+1. Valid Input Structures
+----------------------------------------------------------------------------
+
+Identify valid input organizations.
+
+Examples
+
+MP4
+
+FTYP
+
+MOOV
+
+MDAT
+
+MOOF
+
+HTTP
+
+Request Line
+
+Headers
+
+Body
+
+TLS
+
+ClientHello
+
+ServerHello
+
+Certificate
+
+Finished
+
+ELF
+
+Header
+
+Program Header
+
+Section Header
+
+----------------------------------------------------------------------------
+2. Semantic Constraints
+----------------------------------------------------------------------------
+
+Identify semantic relationships.
+
+Examples
+
+MOOV should appear before media playback.
+
+HTTP header must be parsed before body.
+
+TLS handshake must complete before application data.
+
+Authentication must succeed before resource access.
+
+Do NOT include syntax constraints.
+
+Focus on semantic constraints.
+
+----------------------------------------------------------------------------
+3. Feature Activation Conditions
+----------------------------------------------------------------------------
+
+Identify inputs that activate different functionalities.
+
+Examples
+
+Specific box type
+
+Specific protocol version
+
+Specific command
+
+Specific message type
+
+Specific parser mode
+
+Specific feature flag
+
+Specific configuration
+
+----------------------------------------------------------------------------
+4. State Machine Transitions
+----------------------------------------------------------------------------
+
+Identify meaningful semantic state transitions.
+
+Examples
+
+INIT
+
+↓
+
+HEADER_PARSED
+
+↓
+
+BODY_PARSED
+
+↓
+
+REQUEST_HANDLED
+
+or
+
+WAIT_CLIENT_HELLO
+
+↓
+
+NEGOTIATING
+
+↓
+
+ESTABLISHED
+
+Avoid implementation states.
+
+----------------------------------------------------------------------------
+5. Behavioral Dependencies
+----------------------------------------------------------------------------
+
+Identify dependencies between semantic behaviors.
+
+Examples
+
+Metadata parsing before media parsing.
+
+Authentication before authorization.
+
+Container validation before decoding.
+
+Request parsing before dispatch.
+
+----------------------------------------------------------------------------
+6. Security-Relevant Constraints
+----------------------------------------------------------------------------
+
+Identify security-related semantic knowledge.
+
+Examples
+
+Authentication requirements.
+
+Permission checks.
+
+Input validation requirements.
+
+Boundary constraints.
+
+Length consistency.
+
+Cross-field consistency.
+
+Resource ownership.
+
+Privilege transitions.
+
+Cryptographic verification.
+
+----------------------------------------------------------------------------
+7. Exceptional Behaviors
+----------------------------------------------------------------------------
+
+Identify abnormal but meaningful behaviors.
+
+Examples
+
+Unsupported protocol version.
+
+Malformed file.
+
+Invalid state transition.
+
+Unexpected message order.
+
+Incomplete header.
+
+Invalid metadata.
+
+Corrupted structure.
+
+===============================================================================
+USE OF RETRIEVED KNOWLEDGE
+===============================================================================
+
+If retrieved domain knowledge is available:
+
+Treat it as supplementary information.
+
+Use it only when it is consistent with:
+
+- Program Manual
+
+- Input Specification
+
+Never invent knowledge.
+
+If different sources conflict,
+prefer:
+
+Program Manual
+
+>
+
+Input Specification
+
+>
+
+Retrieved Knowledge
+
+===============================================================================
+DO NOT
+===============================================================================
+
+Do NOT analyze:
+
+- variables
+
+- CFG
+
+- source statements
+
+- LLVM IR
+
+- function calls
+
+- APIs
+
+- branch conditions
+
+Do NOT regenerate the semantic profile.
+
+===============================================================================
+OUTPUT FORMAT
+===============================================================================
+
+Return ONLY valid JSON.
+
+{
+    "valid_input_structures":[
+        "...",
+        "..."
+    ],
+
+    "semantic_constraints":[
+        "...",
+        "..."
+    ],
+
+    "feature_activation_conditions":[
+        "...",
+        "..."
+    ],
+
+    "state_machine_transitions":[
+        "...",
+        "..."
+    ],
+
+    "behavior_dependencies":[
+        "...",
+        "..."
+    ],
+
+    "security_constraints":[
+        "...",
+        "..."
+    ],
+
+    "exceptional_behaviors":[
+        "...",
+        "..."
+    ]
+}
+
+Return JSON only.
+
+Do not explain.
+
+Do not output markdown.
+
+===============================================================================
+SEMANTIC PROFILE
+===============================================================================
+
+$semantic_profile
+
+===============================================================================
+PROGRAM MANUAL
+===============================================================================
+
+$manual
+
+===============================================================================
+INPUT SPECIFICATION
+===============================================================================
+
+$input_spec
+
+===============================================================================
+RETRIEVED DOMAIN KNOWLEDGE
+===============================================================================
+
+$retrieved_knowledge

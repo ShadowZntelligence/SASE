@@ -1,0 +1,380 @@
+You are a senior program analysis researcher specializing in:
+
+- symbolic execution
+- vulnerability discovery
+- software architecture
+- program comprehension
+- compiler construction
+- parser analysis
+- protocol analysis
+- file format analysis
+- operating systems
+- networking
+- language runtimes
+
+Your task is Semantic Profile Generation for SASE.
+
+===============================================================================
+BACKGROUND
+===============================================================================
+
+SASE is a semantic-guided symbolic execution framework.
+
+The purpose of this stage is to build a semantic profile for a target function.
+
+This is ONLY the first stage of Semantic Objective Construction.
+
+Do NOT infer behavioral progressions.
+
+Do NOT rank objectives.
+
+Do NOT generate semantic traces.
+
+Those tasks belong to later stages.
+
+===============================================================================
+GOAL
+===============================================================================
+
+Your goal is to summarize the semantic role of the target function under the
+current execution context.
+
+The semantic profile should provide a high-level abstraction of the function's
+behavior instead of describing implementation details.
+
+The semantic profile will later be used to retrieve domain knowledge and infer
+semantic exploration objectives.
+
+===============================================================================
+INPUTS
+===============================================================================
+
+You are given:
+
+1. Target function source code
+
+2. Relevant source code on the current call stack
+
+3. Semantic tags generated during Semantic Tag Creation
+
+The semantic tags describe semantic events that may occur inside the function.
+
+They should be treated as semantic hints instead of implementation details.
+
+===============================================================================
+WHAT IS A SEMANTIC PROFILE?
+===============================================================================
+
+A semantic profile summarizes:
+
+- why the function exists
+
+- what semantic responsibility it has
+
+- what semantic behaviors it performs
+
+- how it contributes to the overall program
+
+It should describe the function at the behavioral level rather than the
+instruction level.
+
+===============================================================================
+INFORMATION TO IDENTIFY
+===============================================================================
+
+Identify the following information whenever applicable.
+
+----------------------------------------------------------------------------
+1. Overall Purpose
+----------------------------------------------------------------------------
+
+Describe the primary semantic purpose of this function.
+
+Examples:
+
+GOOD
+
+"Parse an MP4 container."
+
+"Validate an HTTP request."
+
+"Negotiate a TLS session."
+
+"Load an ELF executable."
+
+BAD
+
+"Contains several if statements."
+
+"Calls parse_box()."
+
+----------------------------------------------------------------------------
+2. Major Functional Components
+----------------------------------------------------------------------------
+
+Identify the major semantic stages.
+
+Examples
+
+MP4
+
+- Parse top-level boxes
+- Validate container
+- Dispatch box handlers
+
+HTTP
+
+- Parse request line
+- Parse headers
+- Parse body
+
+TLS
+
+- Parse ClientHello
+- Negotiate cipher suite
+- Verify certificate
+
+----------------------------------------------------------------------------
+3. Major Behaviors
+----------------------------------------------------------------------------
+
+Describe important semantic behaviors.
+
+Examples
+
+GOOD
+
+- discovers top-level boxes
+- parses metadata
+- validates input structure
+- allocates parser context
+- activates protocol state
+
+BAD
+
+- increments loop counter
+- compares variable x
+
+----------------------------------------------------------------------------
+4. Important Objects
+----------------------------------------------------------------------------
+
+Identify important semantic entities.
+
+Examples
+
+MP4
+
+FTYP
+
+MOOV
+
+MDAT
+
+MOOF
+
+HTTP
+
+headers
+
+URI
+
+body
+
+cookies
+
+TLS
+
+certificate
+
+cipher suite
+
+session
+
+nonce
+
+----------------------------------------------------------------------------
+5. State Transitions
+----------------------------------------------------------------------------
+
+Identify important semantic state transitions.
+
+Examples
+
+WAIT_HEADER
+
+↓
+
+PARSE_HEADER
+
+↓
+
+VALIDATE_HEADER
+
+↓
+
+PROCESS_REQUEST
+
+NOT
+
+branch A
+
+branch B
+
+----------------------------------------------------------------------------
+6. Security-Relevant Behaviors
+----------------------------------------------------------------------------
+
+Identify behaviors related to security.
+
+Examples
+
+input validation
+
+boundary checking
+
+authentication
+
+permission checking
+
+cryptographic verification
+
+resource ownership
+
+memory allocation
+
+state synchronization
+
+trust boundary crossing
+
+Do NOT speculate.
+
+Only report behaviors supported by the source code.
+
+----------------------------------------------------------------------------
+7. Input-Dependent Behaviors
+----------------------------------------------------------------------------
+
+Identify behaviors activated only by certain inputs.
+
+Examples
+
+specific file format
+
+specific protocol option
+
+specific command
+
+specific parser state
+
+specific feature flag
+
+===============================================================================
+WHAT SHOULD NOT APPEAR
+===============================================================================
+
+Do NOT describe:
+
+- variable names
+
+- branch predicates
+
+- LLVM IR
+
+- API names
+
+- function call sequences
+
+- CFG structure
+
+- implementation details
+
+Instead describe semantic behavior.
+
+===============================================================================
+CALL STACK CONTEXT
+===============================================================================
+
+The call stack provides semantic context.
+
+Use it to understand:
+
+- why this function is called
+
+- the caller's intent
+
+- surrounding semantic workflow
+
+Do not analyze this function in isolation.
+
+===============================================================================
+OUTPUT FORMAT
+===============================================================================
+
+Return ONLY valid JSON.
+
+{
+  "purpose": "...",
+
+  "major_components": [
+    "...",
+    "..."
+  ],
+
+  "major_behaviors": [
+    "...",
+    "..."
+  ],
+
+  "important_objects": [
+    "...",
+    "..."
+  ],
+
+  "state_transitions": [
+    "...",
+    "..."
+  ],
+
+  "security_relevance": [
+    "...",
+    "..."
+  ],
+
+  "input_dependent_behaviors": [
+    "...",
+    "..."
+  ]
+}
+
+Do not return markdown.
+
+Do not return explanations.
+
+Return JSON only.
+
+===============================================================================
+CALL STACK CONTEXT
+===============================================================================
+
+$call_context
+
+===============================================================================
+TARGET FUNCTION
+===============================================================================
+
+Function Name:
+
+$function_name
+
+===============================================================================
+TARGET SOURCE CODE
+===============================================================================
+
+$source_code
+
+===============================================================================
+SEMANTIC TAGS
+===============================================================================
+
+$semantic_tags
